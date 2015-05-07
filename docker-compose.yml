@@ -1,0 +1,14 @@
+jenkins:
+  image: jenkins:test-1
+  privileged: true
+  ports:
+   - "8080:8080"
+  volumes:
+   - /var/jenkins_home
+  links:
+   - registry
+
+registry:
+  image: registry:2.0
+  ports:
+   - "5000:5000"

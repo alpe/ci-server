@@ -1,5 +1,13 @@
 # Jenkins CI
 
+## Start
+
+	docker-compose up
+
+### References
+Compose CLI: https://docs.docker.com/compose/cli/
+Compose yml: https://docs.docker.com/compose/yml
+Docker registry server: https://github.com/docker/distribution/blob/master/docs/deploying.md
 
 ### Docker image
 See https://registry.hub.docker.com/_/jenkins/ for details.
@@ -37,7 +45,11 @@ http://<HOST>:<PORT>/pluginManager/api/json?tree=plugins[shortName,version]&pret
 ## References
 http://www.jayway.com/2015/03/14/docker-in-docker-with-jenkins-and-supervisord/
 [Docker in Docker](https://github.com/jpetazzo/dind)
+
 ##Notes
+
+### CI Workflow
+checkout --> go test -v ./... -->
 
 docker -v /var/run/docker.sock:/var/run/docker.sock
 
