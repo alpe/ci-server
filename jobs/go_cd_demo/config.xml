@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.3.5">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/alpe/ci-example-project.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/dummy</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>H/2 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>service=$JOB_NAME
+branch=$(echo $GIT_BRANCH | cut -d/ -f 2)
+gobuilder_image=registry:5000/go_builder_image
+EXT_PORT=8090
+
+echo &quot;build image&quot;
+docker run --rm \
+  -v $(pwd):/src \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  $gobuilder_image \
+  $service:$branch 
+
+
+echo &quot;smoke test image&quot;
+CONTAINER_ID=$(docker run -d -p 127.0.0.1:$EXT_PORT:8080 $service:$branch)
+
+curl --silent --max-time 10 --write-out &quot;%{http_code}&quot; \
+--output /dev/null  http://127.0.0.1:$EXT_PORT/
+
+echo &quot;clean up after test&quot;
+docker stop $CONTAINER_ID
+docker rm -v $CONTAINER_ID
+
+echo &quot;tag + upload image&quot;
+docker tag $service:$branch registry:5000/$service:$branch-$BUILD_NUMBER
+docker push registry:5000/$service:$branch-$BUILD_NUMBER
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>go_vet.txt, golint.txt, cover.*</artifacts>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>false</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>
