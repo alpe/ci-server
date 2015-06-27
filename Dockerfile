@@ -36,7 +36,19 @@ ADD ./wrapdocker /usr/local/bin/wrapdocker
 RUN chmod +x /usr/local/bin/wrapdocker
 VOLUME /var/lib/docker
 
+# Seed jobs
 COPY jobs /usr/share/jenkins/ref/jobs/
+
+# copy ssh keys
+COPY ssh /usr/share/jenkins/ref/.ssh/
+RUN chown jenkins.jenkins -R /usr/share/jenkins/ref/.ssh/
+
+# copy docker registry auth token
+COPY .dockercfg /usr/share/jenkins/ref/
+# install fleet cli
+COPY fleet/fleetctl /usr/bin/
+
+# TODO: set docker registry url via env
 
 # Let supervisor manage program starts
 ENTRYPOINT ["/bin/sh", "-c"]

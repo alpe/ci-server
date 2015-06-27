@@ -1,5 +1,5 @@
 jenkins:
-  image: jenkins:test-1
+  image: jenkins:latest
   privileged: true
   ports:
    - "8080:8080"

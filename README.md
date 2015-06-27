@@ -1,24 +1,45 @@
 # Jenkins CI
 
-## Start
 
-	docker-compose up
+
+## Getting started
+
+build keys:
+~~~
+ cd ssh
+ openssl genrsa -out id_rsa 2048
+ openssl rsa -in id_rsa -pubout -out id_rsa.pub
+~~~
+start ssh-agent on server:
+~~~
+eval `ssh-agent -s`
+ssh-add
+~~~
+## Prepare fleet command
+~~~
+export FLEETCTL_TUNNEL=46.101.190.178
+~~~
+
 
 ### References
 Compose CLI: https://docs.docker.com/compose/cli/
 Compose yml: https://docs.docker.com/compose/yml
 Docker registry server: https://github.com/docker/distribution/blob/master/docs/deploying.md
 
-### Docker image
-See https://registry.hub.docker.com/_/jenkins/ for details.
+### Docker images
+Jenkins base image: https://registry.hub.docker.com/_/jenkins/ for details.
 
-#### Build new image
+#### Build new custom image
 
-	docker build -t jenkins:test-1  .
+	docker build -t jenkins:latest  .
 
-Start Jenkins with a *peristent volume*:
+Start Jenkins and local docker registry:
 
-    docker run --privileged --name myjenkins -p 8080:8080 -v /var/jenkins_home jenkins:test-1
+	docker-compose up
+
+Manual start Jenkins with a *peristent volume*:
+
+    docker run --privileged --name myjenkins -p 8080:8080 -v /var/jenkins_home jenkins:latest
 
 
 Open in browser: 
@@ -39,27 +60,53 @@ If you bind mount in a volume - you can simply back up that directory (which is 
 
 If your volume is inside a container - you can use `docker cp $ID:/var/jenkins_home command` to extract the data.
 
-### Get a list of plugins
+### Get a list of installed Jenkins plugins
 http://<HOST>:<PORT>/pluginManager/api/json?tree=plugins[shortName,version]&pretty=true
 
 ## References
 http://www.jayway.com/2015/03/14/docker-in-docker-with-jenkins-and-supervisord/
 [Docker in Docker](https://github.com/jpetazzo/dind)
 
+## TODO
+ - [ ] Domain
+ - [ ] TLS for registry
+
 ##Notes
 
 ### CI Workflow
-checkout --> go test -v ./... -->
+checkout --> 
+go vet
+go test -v ./... 
+go lint
+go coverage
+-->
 
 docker -v /var/run/docker.sock:/var/run/docker.sock
 
 ~~~
 service=$JOB_NAME
 branch=$(echo $GIT_BRANCH | cut -d/ -f 2)
+gobuilder_image=registry:5000/go_builder_image
 
+echo "build image"
 docker run --rm \
   -v $(pwd):/src \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  centurylink/golang-builder \
+  $gobuilder_image \
   $service:$branch 
+
+
+echo "smoke test image"
+CONTAINER_ID=$(docker run -d -p 127.0.0.1:8090:8080 $service:$branch)
+
+curl --silent --max-time 10 --write-out "%{http_code}" \
+--output /dev/null  http://127.0.0.1:8090/
+
+echo "clean up after test"
+docker stop $CONTAINER_ID
+docker rm -v $CONTAINER_ID
+
+echo "tag + upload image"
+docker tag $service:$branch registry:5000/$service:$branch-$BUILD_NUMBER
+docker push registry:5000/$service:$branch-$BUILD_NUMBER
 ~~~
