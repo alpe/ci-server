@@ -1,6 +1,0 @@
-github-api:1.67
-git-client:1.17.0
-scm-api:0.2
-git:2.3.5
-github:1.11.3
-ws-cleanup:0.25
