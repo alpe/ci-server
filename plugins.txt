@@ -1,0 +1,16 @@
+credentials:1.28
+ssh-credentials:1.12
+plain-credentials:1.1
+mailer:1.17,
+scm-api:1.2,
+token-macro:1.12.1
+git:2.4.4
+github-api:1.75
+github:1.19.1
+ghprb:1.31.4
+ssh-agent:1.10
+workflow-step-api:2.0
+matrix-project:1.6
+ws-cleanup:0.29
+envinject:1.92.1
+icon-shim:2.0.3
