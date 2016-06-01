@@ -16,3 +16,5 @@ RUN apt-get install -qqy lxc-docker && rm -rf /var/lib/apt/lists/*
 
 USER ${user}
 
+RUN mkdir ~/.ssh
+COPY known_hosts ~/.ssh
