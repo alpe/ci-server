@@ -26,8 +26,10 @@ ExecStart=/usr/bin/docker run --rm \
   --read-only \
   --name ${container_name} \
   --env UNIT_NAME=%n \
-  --env-file=/configs/docker-registry/s3.env \
-  --publish \${COREOS_PRIVATE_IPV4}:5000:5000 \
+  --publish \${COREOS_PRIVATE_IPV4}:8080:8080 \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume /var/jenkins_home:/var/jenkins_home \
+  --volume /var/keys:/var/keys \
   repo.i-nsel.com/${PROJECT_NAME}:${BUILD_VERSION}
 
 ExecStop=/usr/bin/docker stop ${container_name}
