@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -e
+
+container_name=${PROJECT_NAME}-${BUILD_VERSION}-%i
+
+cat <<EOF
+[Unit]
+Description=${PROJECT_NAME}
+After=network.target
+
+[Service]
+User=core
+Type=simple
+Restart=on-failure
+EnvironmentFile=/etc/environment
+
+ExecStartPre=-/usr/bin/docker pull repo.i-nsel.com/${PROJECT_NAME}:${BUILD_VERSION}
+ExecStartPre=/usr/bin/bash -c ' \
+  for id in \$(docker ps --all --quiet --filter name=${PROJECT_NAME}-${BUILD_VERSION}-*); do \
+    docker rm --force \$id; \
+  done; \
+  '
+
+ExecStart=/usr/bin/docker run --rm \
+  --read-only \
+  --name ${container_name} \
+  --env UNIT_NAME=%n \
+  --env-file=/configs/docker-registry/s3.env \
+  --publish ${COREOS_PRIVATE_IPV4}:5000:5000 \
+  repo.i-nsel.com/${PROJECT_NAME}:${BUILD_VERSION}
+
+ExecStop=/usr/bin/docker stop ${container_name}
+
+[X-Fleet]
+Conflicts=${PROJECT_NAME}-${BUILD_VERSION}@*.service
+EOF
