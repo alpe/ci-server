@@ -23,7 +23,6 @@ ExecStartPre=/usr/bin/bash -c ' \
   '
 
 ExecStart=/usr/bin/docker run --rm \
-  --read-only \
   --name ${container_name} \
   --env UNIT_NAME=%n \
   --publish \${COREOS_PRIVATE_IPV4}:8080:8080 \
