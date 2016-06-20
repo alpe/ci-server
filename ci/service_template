@@ -27,9 +27,11 @@ ExecStart=/usr/bin/docker run --rm \
   --env UNIT_NAME=%n \
   --publish \${COREOS_PRIVATE_IPV4}:8080:8080 \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume /var/jenkins_home:/var/jenkins_home \
-  --volume /var/keys:/var/keys \
+  --volume /var/jenkins_home:/var/jenkins_home:rw \
+  --volume /configs/jenkins/keys:/var/.keys:ro \
+  --env JAVA_OPTS="-Dorg.apache.commons.jelly.tags.fmt.timeZone=Europe/Berlin" \
   repo.i-nsel.com/${PROJECT_NAME}:${BUILD_VERSION}
+
 
 ExecStop=/usr/bin/docker stop ${container_name}
 
