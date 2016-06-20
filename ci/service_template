@@ -27,7 +27,7 @@ ExecStart=/usr/bin/docker run --rm \
   --name ${container_name} \
   --env UNIT_NAME=%n \
   --env-file=/configs/docker-registry/s3.env \
-  --publish ${COREOS_PRIVATE_IPV4}:5000:5000 \
+  --publish \${COREOS_PRIVATE_IPV4}:5000:5000 \
   repo.i-nsel.com/${PROJECT_NAME}:${BUILD_VERSION}
 
 ExecStop=/usr/bin/docker stop ${container_name}
